@@ -8,7 +8,7 @@ function Navbar() {
   return (
     <header className="flex items-center justify-between px-4 py-3 border-b md:px-6">
       <Link className="flex items-center gap-2 text-lg font-bold" href="/">
-        <span>Dictionary</span>
+        <span>Look Up</span>
       </Link>
       <div className="flex items-center gap-4">
         {User.length === 0 ? (

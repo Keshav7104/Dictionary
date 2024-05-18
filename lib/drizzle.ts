@@ -13,10 +13,15 @@ export const WordTable = pgTable(
   {
     id: serial('id').primaryKey(),
     word: text('word').notNull(),
+    partofspeech:text('partofspeech'),
+    usage:text('usage'),
+    synoniumid:text('synoniumid'),
+    antoniumid:text('antoniumid'),
+    addedby:text('addedby').notNull(),
   },
   (words) => {
     return {
-      uniqueIdx: uniqueIndex('unique_idx').on(words.word),
+      uniqueIdx: uniqueIndex('unique_idx').on(words.id),
     }
   }
 )

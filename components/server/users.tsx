@@ -1,13 +1,14 @@
 "use server";
 
-import { IFormInput, LoginForm } from "../types";
-import { db } from "@/lib/drizzle";
+import { IFormInput, LoginForm, SearchResponse, SearchResponseHome } from "../types";
+import { WordTable, db } from "@/lib/drizzle";
 import { UserTable } from "@/lib/drizzle";
 import { seed } from "@/lib/userseed";
 import bcrypt from "bcrypt";
 import { eq } from "drizzle-orm";
 
-export const addUser = async (data: IFormInput) => {
+// addUser function
+export const addUser = async (data: IFormInput):Promise<{code:number,message:string}>=> {
   try {
     // Hash the password before storing it
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -22,7 +23,10 @@ export const addUser = async (data: IFormInput) => {
       })
       .returning();
 
-    return { code: 100, message: "Signed up successfully Now you can Login..." };
+    return {
+      code: 201,
+      message: "Signed up successfully. Now you can log in.",
+    };
   } catch (e: any) {
     if (e.message.includes(`relation "${UserTable}" does not exist`)) {
       console.log(
@@ -30,14 +34,14 @@ export const addUser = async (data: IFormInput) => {
       );
       await seed();
       return {
-        code: 501,
-        message: "An error occurred, try again after some time",
+        code: 500,
+        message: "An error occurred, try again after some time.",
       };
     } else if (e.code === "23505") {
       // Unique constraint violation (PostgreSQL specific error code)
       return {
-        code: 501,
-        message: "User already exists with this username",
+        code: 409,
+        message: "User already exists with this username.",
       };
     } else if (
       e.message.includes("NetworkError") ||
@@ -46,26 +50,31 @@ export const addUser = async (data: IFormInput) => {
       // Network errors
       console.error("Network error, please check your internet connection.");
       return {
-        code: 501,
+        code: 503,
         message: "Network error, please check your internet connection.",
       };
     } else {
       console.error(e);
       return {
-        code: 501,
+        code: 500,
         message: "An unexpected error occurred.",
       };
     }
   }
 };
 
-export const login = async (data: LoginForm) => {
+// login function
+export const login = async (data: LoginForm):Promise<{code:number,message:string}> => {
   try {
     // Retrieve the user from the database
-    const users = await db.select().from(UserTable).where(eq(UserTable.username, data.username)).limit(1);
+    const users = await db
+      .select({ username: UserTable.username, password: UserTable.password })
+      .from(UserTable)
+      .where(eq(UserTable.username, data.username))
+      .limit(1);
 
     if (users.length === 0) {
-      return { code: 401, message: "Invalid username or password" };
+      return { code: 401, message: "Invalid username or password." };
     }
 
     const user = users[0];
@@ -74,9 +83,9 @@ export const login = async (data: LoginForm) => {
     const passwordMatch = await bcrypt.compare(data.password, user.password);
 
     if (passwordMatch) {
-      return { code: 100, message: "Logged in successfully" };
+      return { code: 200, message: "Logged in successfully." };
     } else {
-      return { code: 401, message: "Invalid username or password" };
+      return { code: 401,message: "Invalid username or password." };
     }
   } catch (e: any) {
     if (e.message.includes(`relation "${UserTable}" does not exist`)) {
@@ -85,8 +94,8 @@ export const login = async (data: LoginForm) => {
       );
       await seed();
       return {
-        code: 501,
-        message: "An error occurred, try again after some time",
+        code: 500,
+        message: "An error occurred, try again after some time.",
       };
     } else if (
       e.message.includes("NetworkError") ||
@@ -95,15 +104,52 @@ export const login = async (data: LoginForm) => {
       // Network errors
       console.error("Network error, please check your internet connection.");
       return {
-        code: 501,
+        code: 503,
         message: "Network error, please check your internet connection.",
       };
     } else {
       console.error(e);
       return {
-        code: 501,
+        code: 500, 
         message: "An unexpected error occurred.",
       };
     }
   }
 };
+
+export const getWords = async (User:string):Promise<SearchResponseHome> =>{
+  try {
+    const response = await db.select({
+      id:WordTable.id,
+      usage:WordTable.usage,
+      word:WordTable.word,
+    }).from(WordTable).where(eq(WordTable.addedby,User));
+
+    return{
+      code:200,
+      data:response,
+      message:"success"
+    }
+
+  } catch (e:any) {
+    if (
+      e.message.includes("NetworkError") ||
+      e.message.includes("ECONNREFUSED")
+    ) {
+      // Network errors
+      console.error("Network error, please check your internet connection.");
+      return {
+        code: 503,
+        data:[],
+        message: "Network error, please check your internet connection.",
+      };
+    } else {
+      console.error(e);
+      return {
+        code: 500, 
+        data:[],
+        message: "An unexpected error occurred.",
+      };
+    }
+  }
+}

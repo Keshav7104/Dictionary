@@ -21,12 +21,11 @@ export function Login() {
   const submit = async (form: LoginForm) => {
     try {
       // Show a loading toast while the promise is pending
-      console.log(form);
       await toast.promise(login(form), {
         pending: "Processing your request...",
         success: {
           render({ data }) {
-            if (data.code === 100) {
+            if (data.code === 200) {
               setUser(form.username);
               return data.message + " " + form.username;
             } else {
@@ -72,15 +71,7 @@ export function Login() {
             />
           </div>
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <Link
-                className="text-sm font-medium text-gray-900 hover:underline"
-                href="#"
-              >
-                Forgot password?
-              </Link>
-            </div>
+          <Label htmlFor="password">Password</Label>
             <Input
               id="password"
               {...register("password", {
