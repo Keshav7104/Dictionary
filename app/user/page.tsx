@@ -2,11 +2,11 @@
 import { useSearchParams } from "next/navigation";
 import { useUser } from "@/components/Context";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import Modal from "react-modal";
 import {
   TableHead,
   TableRow,
@@ -15,12 +15,17 @@ import {
   TableBody,
   Table,
 } from "@/components/ui/table";
+import { getWords } from "@/components/server/users";
+import { WordHalf } from "@/components/types";
+import { Wordform } from "@/components/component/wordform";
 
 function page() {
   const params = useSearchParams();
   const route = useRouter();
   const queryUser = params.get("user");
   const [User, __] = useUser();
+  const [Words, setWords] = useState<WordHalf[]>([]);
+  const [isOpen, setisOpen] = useState(false);
 
   useEffect(() => {
     if (User.length === 0 || User !== queryUser) {
@@ -30,6 +35,24 @@ function page() {
       toast.success(`Hi ${User}...`);
     }
   }, [User, queryUser, route]);
+
+  const loadWords = async () => {
+    try {
+      const response = await getWords(User);
+      // console.log(response);
+      setWords(response.data);
+    } catch (error) {
+      toast.error("An error occurred try later...");
+    }
+  };
+
+  function closeModal() {
+    setisOpen(false);
+  }
+
+  useEffect(() => {
+    loadWords();
+  }, []);
 
   return (
     <div className="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
@@ -44,31 +67,27 @@ function page() {
                 <ListIcon className="h-4 w-4" />
                 My Words
               </Link>
-              <Link
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900"
-                href="#"
-              >
-                <PlusIcon className="h-4 w-4" />
-                Add New Word
-              </Link>
-              <Link
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900"
-                href="#"
-              >
-                <PlusIcon className="h-4 w-4" />
-                Add New Meaning
-              </Link>
             </nav>
           </div>
         </div>
       </div>
+      <Modal
+        ariaHideApp={false}
+        isOpen={isOpen}
+        onRequestClose={closeModal}
+      >
+        <Wordform close={closeModal} />
+      </Modal>
       <div className="flex flex-col">
         <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
           <div className="flex items-center">
             <h1 className="font-semibold text-lg md:text-2xl">My Words</h1>
-            <Link className="ml-auto btn btn-primary" href="#">
+            <Button
+              className="ml-auto btn btn-primary"
+              onClick={() => setisOpen((prev) => !prev)}
+            >
               Add New Word
-            </Link>
+            </Button>
           </div>
           <div className="border shadow-sm rounded-lg">
             <Table>
@@ -80,72 +99,24 @@ function page() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <TableRow>
-                  <TableCell className="font-medium">Serendipity</TableCell>
-                  <TableCell>A happy accident or pleasant surprise</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline">
-                        <DeleteIcon className="h-4 w-4" />
-                        Edit
-                      </Button>
-                      <Button color="danger" size="sm" variant="outline">
-                        <TrashIcon className="h-4 w-4" />
-                        Delete
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Ephemeral</TableCell>
-                  <TableCell>Lasting for a very short time</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline">
-                        <DeleteIcon className="h-4 w-4" />
-                        Edit
-                      </Button>
-                      <Button color="danger" size="sm" variant="outline">
-                        <TrashIcon className="h-4 w-4" />
-                        Delete
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Quixotic</TableCell>
-                  <TableCell>Extremely idealistic and impractical</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline">
-                        <DeleteIcon className="h-4 w-4" />
-                        Edit
-                      </Button>
-                      <Button color="danger" size="sm" variant="outline">
-                        <TrashIcon className="h-4 w-4" />
-                        Delete
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Melancholic</TableCell>
-                  <TableCell>
-                    Characterized by sadness, gloom, and depression
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button size="sm" variant="outline">
-                        <DeleteIcon className="h-4 w-4" />
-                        Edit
-                      </Button>
-                      <Button color="danger" size="sm" variant="outline">
-                        <TrashIcon className="h-4 w-4" />
-                        Delete
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                {Words.map((word, index) => (
+                  <TableRow key={index}>
+                    <TableCell className="font-medium">{word.word}</TableCell>
+                    <TableCell>{word.usage}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="outline">
+                          <DeleteIcon className="h-4 w-4" />
+                          Edit
+                        </Button>
+                        <Button color="danger" size="sm" variant="outline">
+                          <TrashIcon className="h-4 w-4" />
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </div>
@@ -156,7 +127,6 @@ function page() {
 }
 
 export default page;
-
 
 function DeleteIcon({ className }: { className: string }) {
   return (

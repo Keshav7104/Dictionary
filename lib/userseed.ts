@@ -17,11 +17,11 @@ const newwords: NewUser[] = [
 export async function seed() {
   // Create table with raw SQL
   const createTable = await sql.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        username VARCHAR(255) PRIMARY KEY,
-        email VARCHAR(255) NOT NULL,
-        password VARCHAR(255) NOT NULL,
-      );
+  CREATE TABLE IF NOT EXISTS users (
+    username VARCHAR(255) PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+  );
   `)
   console.log(`Created "words" table`)
 

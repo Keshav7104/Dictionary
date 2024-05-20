@@ -33,6 +33,7 @@ export type SearchResponse = {
     word:Word[],
     synonym:Nouym[],
     antonym:Nouym[],
+    meaning:{meaning:string}[],
   } | null;
   message: string;
 };

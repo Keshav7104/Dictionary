@@ -14,6 +14,7 @@ function page() {
   const [Searched, setWord] = useState<Word[] | undefined>([]);
   const [synonyms, setsynonyms] = useState<Nouym[] | undefined>([]);
   const [antonym, setantonym] = useState<Nouym[] | undefined>([]);
+  const [meaning, setmeaning] = useState<{ meaning: string }[] | undefined>([]);
   const [loading, setloading] = useState(true);
 
   const search = async () => {
@@ -28,6 +29,7 @@ function page() {
         setWord(response.data?.word);
         setsynonyms(response.data?.synonym);
         setantonym(response.data?.antonym);
+        setmeaning(response.data?.meaning);
       }
     } catch (error) {
       toast.error("An unexpected error occurred.");
@@ -63,6 +65,18 @@ function page() {
                   ? Searched[0].partofspeech
                   : "Unknown"}
               </p>
+            </div>
+            <div className="space-y-4">
+              <h2 className="text-2xl font-semibold">Meanings of the Word</h2>
+              <div className="space-y-2">
+                <p>
+                  {meaning?.length !== 0 &&
+                    meaning !== undefined &&
+                    meaning.map((mean, index) => (
+                      <span key={index}>{mean.meaning}<br /></span>
+                    ))}
+                </p>
+              </div>
             </div>
             <div className="space-y-4">
               <h2 className="text-2xl font-semibold">Usage Examples</h2>

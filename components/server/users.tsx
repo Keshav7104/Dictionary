@@ -24,7 +24,7 @@ export const addUser = async (data: IFormInput):Promise<{code:number,message:str
       .returning();
 
     return {
-      code: 201,
+      code: 200,
       message: "Signed up successfully. Now you can log in.",
     };
   } catch (e: any) {
@@ -125,6 +125,7 @@ export const getWords = async (User:string):Promise<SearchResponseHome> =>{
       word:WordTable.word,
     }).from(WordTable).where(eq(WordTable.addedby,User));
 
+    // console.log(response)
     return{
       code:200,
       data:response,
